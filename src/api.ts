@@ -60,8 +60,8 @@ export async function handleApi(req: Request, env: Env): Promise<Response | null
       const claim: any = await (await store(env).fetch("https://x/claim", { method: "POST", body: JSON.stringify({ id: p.id }) })).json();
       if (!claim.ok) return Response.json({ error: "already-used" }, { status: 401 });
       const r = await check(b.answer ?? "");
-      const solveMs = Date.now() - t0;
-      console.log(JSON.stringify({ gate: p.gate, outcome: r.pass ? "pass" : "fail", latency: solveMs }));
+      const solveMs = Date.now() - p.iat * 1000;
+      console.log(JSON.stringify({ gate: p.gate, outcome: r.pass ? "pass" : "fail", latency: Date.now() - t0 }));
       if (!r.pass) return Response.json({ pass: false, reason: r.reason });
       const passedAt = new Date().toISOString();
       const cert = await issueCert(vsec(env), { id: p.id, gate: p.gate, prompt, passedAt });
