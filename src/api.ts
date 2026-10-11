@@ -67,6 +67,11 @@ export async function handleApi(req: Request, env: Env): Promise<Response | null
       const cert = await issueCert(vsec(env), { id: p.id, gate: p.gate, prompt, passedAt });
       const name = cleanStr(b.name, 32);
       const message = cleanStr(b.message, 140);
+      const ip = req.headers.get("cf-connecting-ip")?.split(",")[0]?.trim() || "local";
+      const th: { wait: number } = await (await store(env).fetch("https://x/throttle", { method: "POST", body: JSON.stringify({ ip }) })).json();
+      if (th.wait > 0) {
+        return Response.json({ pass: true, certificate: cert, solveMs, leaderboard: `skipped: 1 pass per minute per solver (retry in ${th.wait}s)` });
+      }
       await store(env).fetch("https://x/solve", { method: "POST", body: JSON.stringify({ id: p.id, gate: p.gate, passedAt, solveMs, name, message }) }).catch(() => {});
       return Response.json({ pass: true, certificate: cert, solveMs });
     }
