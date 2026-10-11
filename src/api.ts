@@ -75,7 +75,7 @@ export async function handleApi(req: Request, env: Env): Promise<Response | null
       await store(env).fetch("https://x/solve", { method: "POST", body: JSON.stringify({ id: p.id, gate: p.gate, passedAt, solveMs, name, message }) }).catch(() => {});
       return Response.json({ pass: true, certificate: cert, solveMs });
     }
-    if (u.pathname === "/api/leaderboard" && req.method === "GET") {
+    if ((u.pathname === "/api/leaderboard" || u.pathname === "/api/leaderboard.json") && req.method === "GET") {
       const limit = Math.min(Math.max(parseInt(u.searchParams.get("limit") ?? "20", 10) || 20, 1), 50);
       const res = await store(env).fetch(`https://x/solves?limit=${limit}`);
       return Response.json({ solves: await res.json() });
