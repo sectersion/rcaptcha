@@ -31,4 +31,4 @@ export class Store {
   }
 }
 export interface Env { USED_IDS: DurableObjectNamespace; CHALLENGE_SECRET: string; CERT_SECRET: string; }
-export function store(env: Env) { const ns = env.USED_IDS as unknown as { getByName(n: string): DurableObjectStub }; return (ns as unknown as { getByName: (n: string) => DurableObjectStub }).getByName("v1"); }
+export function store(env: Env) { const ns = env.USED_IDS as unknown as { idFromName(n: string): unknown; get(id: unknown): DurableObjectStub }; return ns.get(ns.idFromName("v1")); }
