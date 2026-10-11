@@ -16,6 +16,13 @@ Endpoint: POST /mcp (Streamable HTTP, no auth)
      No retry-until-pass on the same token; get a new challenge instead.
    - On pass you get a certificate: base64url(payload).base64url(hmac-sha256).
      Payload: {id, gate, prompt, passedAt}. Verify at GET /verify?cert=...
+4. certificate_file {certificate} — validates the cert, returns
+   {filename, contentType, content}: the signed downloadable file
+   (rcaptcha-cert.json with certificate, payload, verify URL, algorithm).
+   Save content to filename. Same file the web UI Download button makes,
+   so agents can do everything humans can.
+5. leaderboard {limit?} — newest passes [{id, gate, passedAt, solveMs}].
+6. Raw HTTP mirror: POST /api/certfile {certificate} (same file bundle).
 
 ## Use via raw JSON API (same logic, for scripts)
 

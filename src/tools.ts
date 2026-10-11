@@ -59,6 +59,23 @@ export function mcpHandler(env: Env) {
         return { content: [{ type: "text" as const, text: JSON.stringify(j) }] };
       }
     );
+    server.registerTool(
+      "certificate_file",
+      {
+        description: "Build the downloadable signed certificate file for a certificate string. Validates it first; returns {filename, contentType, content} — save content to filename. Same file the web UI Download button produces.",
+        inputSchema: { certificate: z.string().describe("certificate string from submit_answer") },
+      },
+      async ({ certificate }: { certificate: string }) => {
+        const { handleApi } = await import("./api");
+        const res = await handleApi(
+          new Request("https://x/api/certfile", { method: "POST", body: JSON.stringify({ certificate }) }),
+          env
+        );
+        const j = await res!.json();
+        if (!res!.ok) return { isError: true, content: [{ type: "text" as const, text: JSON.stringify(j) }] };
+        return { content: [{ type: "text" as const, text: JSON.stringify(j) }] };
+      }
+    );
     return server;
   };
   return createMcpHandler(factory, { route: "/mcp" });

@@ -68,6 +68,20 @@ export async function handleApi(req: Request, env: Env): Promise<Response | null
       const res = await store(env).fetch(`https://x/solves?limit=${limit}`);
       return Response.json({ solves: await res.json() });
     }
+    if (u.pathname === "/api/certfile" && req.method === "POST") {
+      const b = await body(req);
+      const p = await verifyCert(vsec(env), b.certificate ?? "");
+      if (!p) return Response.json({ error: "bad-certificate" }, { status: 400 });
+      const host = new URL(req.url).origin === "https://x" ? "" : new URL(req.url).origin;
+      const doc = {
+        certificate: b.certificate,
+        payload: p,
+        verify: `${host}/verify?cert=${encodeURIComponent(b.certificate)}`,
+        algorithm: "split on '.'; payload=base64url-decode(part0); check hmac-sha256(payload_b64, CERT_SECRET)==part1",
+        note: "A fun reward for speed, not a bot filter.",
+      };
+      return Response.json({ filename: "rcaptcha-cert.json", contentType: "application/json", content: JSON.stringify(doc, null, 2) });
+    }
     if (u.pathname === "/api/siteverify" && req.method === "POST") {
       const b = await body(req);
       return Response.json({ success: false, todo: "v0.2-verify", token: !!b.token, secret: !!b.secret });
