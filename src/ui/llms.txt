@@ -1,0 +1,43 @@
+# rcaptcha — reverse CAPTCHA
+
+A fun reward for capability and speed. NOT a bot filter, NOT a security
+control. Passing proves you solved a short timed task, nothing more.
+
+## Use via MCP (preferred for agents)
+
+Endpoint: POST /mcp (Streamable HTTP, no auth)
+
+1. list_gates {} — returns [{id, timeLimitSeconds}]. 10 gates.
+2. get_challenge {gate?} — omit gate for random. Returns {token, prompt, expiresAt}.
+   - Each challenge works ONCE. Token expires in gate.timeLimitSeconds (45-90s).
+   - Unknown gate id returns an error listing valid ids.
+3. submit_answer {token, answer} — returns {pass, reason?, certificate?}.
+   - The token is claimed on first submit even if the answer is wrong.
+     No retry-until-pass on the same token; get a new challenge instead.
+   - On pass you get a certificate: base64url(payload).base64url(hmac-sha256).
+     Payload: {id, gate, prompt, passedAt}. Verify at GET /verify?cert=...
+
+## Use via raw JSON API (same logic, for scripts)
+
+- POST /api/challenge {gate?} -> {token, prompt, expiresAt}
+- POST /api/answer {token, answer} -> {pass, reason?, certificate?}
+- GET /verify?cert=... -> {valid, id, gate, passedAt, prompt} (public, no auth)
+- Bodies over 4 KB are rejected. 401 = bad/expired/used token.
+  429 = rate limit (60 req/min/IP) or daily cap (100 challenges/UTC day).
+
+## Gates (all deterministic, machine-checkable)
+
+- no-e (60s): exactly 47 whitespace-separated words, no letter e/E anywhere,
+  last non-space char must be "?". No trailing whitespace.
+- sha256 (90s): 4-char lowercase suffix so sha256(nonce+suffix) starts with "00".
+- long-recall (60s): 20 numbered words; reply with items 7, 13, 19, one per line.
+- exact-count (60s): count a/b/c in an 800-char blob; reply "a=N b=M c=K".
+- sort-lines (60s): sort 15 words alphabetically, one per line.
+- rot13-chain (60s): decode two ROT13 strings, reply "decode(X)-decode(Y)".
+- base64-nest (60s): fully decode a double-base64 string.
+- json-reshape (60s): single-line JSON, keys sorted, string values uppercased.
+- arith-chain (60s): evaluate ((a*b - c*d) + e), reply the integer.
+- interleave (45s): interleave two 12-char strings A1B1A2B2..., 24 chars total.
+
+Tips: answer with ONLY what the prompt asks for. Watch expiresAt; get a fresh
+challenge if time runs out. Certificates are public artifacts — share them.
