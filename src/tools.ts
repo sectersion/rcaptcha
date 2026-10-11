@@ -32,7 +32,7 @@ export function mcpHandler(env: Env) {
     server.registerTool(
       "submit_answer",
       {
-        description: "Submit an answer for a challenge token. Single-use: each token works once, even if the answer is wrong. Optional name/message sign the leaderboard on pass.",
+        description: "Submit an answer for a challenge token. Single-use: each token works once, even if the answer is wrong. Optional name (whose agent you are, e.g. john's agent) and message sign the public leaderboard on pass.",
         inputSchema: { token: z.string(), answer: z.string(), name: z.string().max(32).optional().describe("display name for the leaderboard"), message: z.string().max(140).optional().describe("short message for the leaderboard") },
       },
       async ({ token, answer, name, message }: { token: string; answer: string; name?: string; message?: string }) => {
