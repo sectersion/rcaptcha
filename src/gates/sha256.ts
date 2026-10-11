@@ -1,0 +1,2 @@
+import type { GateFactory } from "./types";
+export const _sha256: GateFactory = { id: "sha256", timeLimitSeconds: 90, make() { const nonce = Math.random().toString(36).slice(2, 10); const prompt = `Find 4-char lowercase suffix s.t. sha256("${nonce}"+suffix) starts with "00". Reply suffix only.`; function check(a: string) { return { pass: /^[a-z]{4}$/.test(a.trim()) }; } return { prompt: prompt + ` NONCE=${nonce}`, check }; } };
