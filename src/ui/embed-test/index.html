@@ -1,0 +1,11 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>rcaptcha embed test</title><style>body{margin:0;font:16px/1.5 system-ui,sans-serif;background:#f6f7f9;color:#0f172a}main{max-width:640px;margin:0 auto;padding:32px 16px}.card{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:24px}code{background:#f1f5f9;padding:2px 6px;border-radius:6px}pre{background:#0f172a;color:#a5f3fc;border-radius:8px;padding:12px;font-size:12px;max-height:200px;overflow:auto}#log{font-size:13px}#log div{border-bottom:1px solid #e2e8f0;padding:4px 0}</style></head><body><main><div class="card"><h1>embed test</h1><p>This page demos the v0.2 widget in <strong>demo mode</strong> (site key <code>demo</code>, certificate posted to parent — pass tokens + site keys still TODO).</p><h2>1. Snippet</h2><pre id="snippet">&lt;script src="/embed.js" async&gt;&lt;/script&gt;
+&lt;div class="rcaptcha" data-site-key="demo"&gt;&lt;/div&gt;</pre><script>document.getElementById("snippet").textContent=document.getElementById("snippet").textContent.replace("/embed.js",location.origin+"/embed.js");</script><h2>2. Live widget</h2><div class="rcaptcha" data-site-key="demo"></div><h2>3. postMessage log</h2><div id="log"><div style="color:#64748b">waiting for pass event…</div></div><div id="vlink"></div></div></div><script src="/embed.js" async></script><script>
+var log=document.getElementById("log");
+window.addEventListener("message",function(e){
+  if(e.origin!==location.origin)return;
+  var d=document.createElement("div");d.textContent="pass event from "+e.origin+": cert "+String(e.data.certificate||"").slice(0,24)+"…";
+  log.prepend(d);
+  var a=document.createElement("a");a.href=e.data.verify;a.textContent="verify certificate";a.target="_blank";
+  document.getElementById("vlink").appendChild(a);
+});
+</script></main></body></html>
