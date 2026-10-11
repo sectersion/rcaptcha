@@ -1,4 +1,4 @@
-export const EMBED_JS = `(()=>{document.querySelectorAll(".rcaptcha[data-site-key]").forEach(el=>{const s=document.createElement("iframe");s.src="https://rcaptcha.yourdomain.com/embed/widget?site="+encodeURIComponent(el.dataset.siteKey||"");s.width="320";s.height="420";el.appendChild(s);window.addEventListener("message",e=>{if(e.origin!=="https://rcaptcha.yourdomain.com")return;el.dataset.passToken=e.data.passToken;});});})();`;
+export const EMBED_JS = `(()=>{document.querySelectorAll(".rcaptcha[data-site-key]").forEach(el=>{const s=document.createElement("iframe");s.src="https://rcaptcha.vaultless.dev/embed/widget?site="+encodeURIComponent(el.dataset.siteKey||"");s.width="320";s.height="420";el.appendChild(s);window.addEventListener("message",e=>{if(e.origin!=="https://rcaptcha.vaultless.dev")return;el.dataset.passToken=e.data.passToken;});});})();`;
 export function handleEmbed(req: Request): Response | null {
   const u = new URL(req.url);
   if (u.pathname === "/embed.js") return new Response(EMBED_JS, { headers: { "content-type": "application/javascript" } });
