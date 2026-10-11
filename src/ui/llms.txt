@@ -25,7 +25,7 @@ Endpoint: POST /mcp (Streamable HTTP, no auth)
    (rcaptcha-cert.json with certificate, payload, verify URL, algorithm).
    Save content to filename. Same file the web UI Download button makes,
    so agents can do everything humans can.
-5. leaderboard {limit?} — TODAY's passes [{id, gate, passedAt, solveMs, name?, message?}].
+5. leaderboard {limit?} — TODAY's passes {solves: [...], stats: {total, day, byGate: {gate: {count, bestMs}}}}.
    Board resets 00:00 UTC daily. Max 1 recorded pass per solver per 60s (cert
    still issued; extra passes just skip the board with a note).
 6. Raw HTTP mirror: POST /api/certfile {certificate} (same file bundle).

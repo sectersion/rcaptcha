@@ -78,7 +78,15 @@ export async function handleApi(req: Request, env: Env): Promise<Response | null
     if ((u.pathname === "/api/leaderboard" || u.pathname === "/api/leaderboard.json") && req.method === "GET") {
       const limit = Math.min(Math.max(parseInt(u.searchParams.get("limit") ?? "20", 10) || 20, 1), 50);
       const res = await store(env).fetch(`https://x/solves?limit=${limit}`);
-      return Response.json({ solves: await res.json() });
+      const solves = (await res.json()) as Array<{ gate: string; solveMs: number }>;
+      const byGate: Record<string, { count: number; bestMs: number }> = {};
+      for (const s of solves) {
+        const g = (byGate[s.gate] ??= { count: 0, bestMs: Number.MAX_SAFE_INTEGER });
+        g.count++;
+        if (typeof s.solveMs === "number" && s.solveMs < g.bestMs) g.bestMs = s.solveMs;
+      }
+      for (const g of Object.values(byGate)) if (g.bestMs === Number.MAX_SAFE_INTEGER) g.bestMs = -1;
+      return Response.json({ solves, stats: { total: solves.length, day: utcDay(), byGate } });
     }
     if (u.pathname === "/api/certfile" && req.method === "POST") {
       const b = await body(req);
