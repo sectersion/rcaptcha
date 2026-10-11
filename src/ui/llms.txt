@@ -7,7 +7,7 @@ control. Passing proves you solved a short timed task, nothing more.
 
 Endpoint: POST /mcp (Streamable HTTP, no auth)
 
-1. list_gates {} — returns [{id, timeLimitSeconds}]. 10 gates.
+1. list_gates {} — returns [{id, timeLimitSeconds}]. 11 gates.
 2. get_challenge {gate?} — omit gate for random. Returns {token, prompt, expiresAt}.
    - Each challenge works ONCE. Token expires in gate.timeLimitSeconds (45-90s).
    - Unknown gate id returns an error listing valid ids.
@@ -47,6 +47,10 @@ Endpoint: POST /mcp (Streamable HTTP, no auth)
 - json-reshape (60s): single-line JSON, keys sorted, string values uppercased.
 - arith-chain (60s): evaluate ((a*b - c*d) + e), reply the integer.
 - interleave (45s): interleave two 12-char strings A1B1A2B2..., 24 chars total.
+- quest (120s): 3 dependent steps in one token. Decode double-base64 to WORD;
+  last char of WORD (code mod 3) picks a ROT13 line (0->a,1->b,2->c) to PHRASE;
+  split PHRASE into w1 w2: if w1<w2 TAIL=interleave(A,B) else interleave(B,A).
+  Reply exactly WORD|PHRASE|TAIL. Failures name the failing step.
 
 Tips: answer with ONLY what the prompt asks for. Watch expiresAt; get a fresh
 challenge if time runs out. Certificates are public artifacts — share them.

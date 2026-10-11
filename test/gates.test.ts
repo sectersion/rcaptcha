@@ -3,6 +3,7 @@ import { noE } from "../src/gates/no-e";
 import { _base64_nest } from "../src/gates/base64-nest";
 import { _arith_chain } from "../src/gates/arith-chain";
 import { _interleave } from "../src/gates/interleave";
+import { quest } from "../src/gates/quest";
 
 describe("no-e", () => {
   it("rejects 46 words", async () => { const { check } = noE.make(); expect((await check("a ".repeat(45).trim() + "?")).pass).toBe(false); });
@@ -30,5 +31,14 @@ describe("params round-trip", () => {
   it("interleave rejects wrong length", async () => {
     const g = _interleave.make();
     expect((await g.check("short")).pass).toBe(false);
+  });
+  it("quest round-trips and pinpoints failing step", async () => {
+    const g = quest.make();
+    const second = quest.make(g.params);
+    expect(second.prompt).toBe(g.prompt);
+    // step 1 right, rest wrong
+    const w = (g.params as { word: string }).word;
+    expect((await second.check("wrong|x|y")).pass).toBe(false);
+    expect((await second.check(`${w}|wrong phrase|x`)).pass).toBe(false);
   });
 });
