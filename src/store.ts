@@ -23,10 +23,21 @@ export class Store {
   async getSite(publicKey: string) { return this.state.storage.get(`site:${publicKey}`); }
   async putSite(s: { publicKey: string; secretKey: string; allowedOrigins: string[] }) { await this.state.storage.put(`site:${s.publicKey}`, s); }
   async claimPass(token: string, ttl: number): Promise<boolean> { if (await this.getEx(`pass:${token}`)) return false; await this.putEx(`pass:${token}`, { at: Date.now() }, ttl); return true; }
+  async recordSolve(e: { id: string; gate: string; passedAt: string; solveMs: number }) {
+    const list = (await this.state.storage.get<Array<Record<string, unknown>>>("solves")) ?? [];
+    list.unshift({ ...e });
+    await this.state.storage.put("solves", list.slice(0, 100));
+  }
+  async recentSolves(limit: number) {
+    const list = (await this.state.storage.get<Array<Record<string, unknown>>>("solves")) ?? [];
+    return list.slice(0, Math.min(Math.max(limit, 1), 50));
+  }
   async fetch(req: Request): Promise<Response> {
     const u = new URL(req.url);
     if (u.pathname.endsWith("/claim")) { const { id } = (await req.json()) as { id: string }; return Response.json({ ok: await this.claim(id) }); }
     if (u.pathname.endsWith("/daily")) { const date = u.searchParams.get("date")!; if (req.method === "POST") return Response.json({ n: await this.incrDaily(date) }); return Response.json({ n: await this.dailyCount(date) }); }
+    if (u.pathname.endsWith("/solve")) { const e = (await req.json()) as { id: string; gate: string; passedAt: string; solveMs: number }; await this.recordSolve(e); return Response.json({ ok: true }); }
+    if (u.pathname.endsWith("/solves")) return Response.json(await this.recentSolves(parseInt(u.searchParams.get("limit") ?? "20", 10) || 20));
     return new Response("not found", { status: 404 });
   }
 }

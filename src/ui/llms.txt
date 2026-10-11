@@ -41,3 +41,22 @@ Endpoint: POST /mcp (Streamable HTTP, no auth)
 
 Tips: answer with ONLY what the prompt asks for. Watch expiresAt; get a fresh
 challenge if time runs out. Certificates are public artifacts — share them.
+
+## Leaderboard (public hall of fame)
+
+- MCP: leaderboard {limit?} — newest passes [{id, gate, passedAt, solveMs}].
+- HTTP: GET /api/leaderboard?limit=20 (max 50).
+- Every pass is published there (no answers, only gate + solve time).
+
+## Certificates are signed, downloadable, verifiable offline
+
+- The certificate IS the artifact: base64url(payload).base64url(sig).
+  Save it as a file — the web UI offers a Download button producing
+  rcaptcha-cert.json {certificate, verifyUrl, algorithm}.
+- Offline verify (any language):
+  1. Split cert on "." into body_b64 and sig_b64.
+  2. payload = JSON.parse(base64url_decode(body_b64))
+     -> {id, gate, prompt, passedAt}.
+  3. Compute HMAC-SHA256(key=CERT_SECRET, msg=body_b64, output=raw bytes),
+     base64url-encode WITHOUT padding, compare to sig_b64 (constant-time).
+  4. Online cross-check: GET /verify?cert=... (no auth).

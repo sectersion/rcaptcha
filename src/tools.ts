@@ -46,6 +46,19 @@ export function mcpHandler(env: Env) {
         return { content: [{ type: "text" as const, text: JSON.stringify(j) }] };
       }
     );
+    server.registerTool(
+      "leaderboard",
+      {
+        description: "Recent rcaptcha passes: [{id, gate, passedAt, solveMs}]. Public hall of fame, newest first.",
+        inputSchema: { limit: z.number().min(1).max(50).optional().describe("max entries, default 20") },
+      },
+      async ({ limit }: { limit?: number }) => {
+        const { handleApi } = await import("./api");
+        const res = await handleApi(new Request(`https://x/api/leaderboard?limit=${limit ?? 20}`), env);
+        const j = await res!.json();
+        return { content: [{ type: "text" as const, text: JSON.stringify(j) }] };
+      }
+    );
     return server;
   };
   return createMcpHandler(factory, { route: "/mcp" });

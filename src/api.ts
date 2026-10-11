@@ -55,10 +55,18 @@ export async function handleApi(req: Request, env: Env): Promise<Response | null
       const claim: any = await (await store(env).fetch("https://x/claim", { method: "POST", body: JSON.stringify({ id: p.id }) })).json();
       if (!claim.ok) return Response.json({ error: "already-used" }, { status: 401 });
       const r = await check(b.answer ?? "");
-      console.log(JSON.stringify({ gate: p.gate, outcome: r.pass ? "pass" : "fail", latency: Date.now() - t0 }));
+      const solveMs = Date.now() - t0;
+      console.log(JSON.stringify({ gate: p.gate, outcome: r.pass ? "pass" : "fail", latency: solveMs }));
       if (!r.pass) return Response.json({ pass: false, reason: r.reason });
-      const cert = await issueCert(vsec(env), { id: p.id, gate: p.gate, prompt, passedAt: new Date().toISOString() });
-      return Response.json({ pass: true, certificate: cert });
+      const passedAt = new Date().toISOString();
+      const cert = await issueCert(vsec(env), { id: p.id, gate: p.gate, prompt, passedAt });
+      await store(env).fetch("https://x/solve", { method: "POST", body: JSON.stringify({ id: p.id, gate: p.gate, passedAt, solveMs }) }).catch(() => {});
+      return Response.json({ pass: true, certificate: cert, solveMs });
+    }
+    if (u.pathname === "/api/leaderboard" && req.method === "GET") {
+      const limit = Math.min(Math.max(parseInt(u.searchParams.get("limit") ?? "20", 10) || 20, 1), 50);
+      const res = await store(env).fetch(`https://x/solves?limit=${limit}`);
+      return Response.json({ solves: await res.json() });
     }
     if (u.pathname === "/api/siteverify" && req.method === "POST") {
       const b = await body(req);
