@@ -32,13 +32,13 @@ export function mcpHandler(env: Env) {
     server.registerTool(
       "submit_answer",
       {
-        description: "Submit an answer for a challenge token. Single-use: each token works once, even if the answer is wrong.",
-        inputSchema: { token: z.string(), answer: z.string() },
+        description: "Submit an answer for a challenge token. Single-use: each token works once, even if the answer is wrong. Optional name/message sign the leaderboard on pass.",
+        inputSchema: { token: z.string(), answer: z.string(), name: z.string().max(32).optional().describe("display name for the leaderboard"), message: z.string().max(140).optional().describe("short message for the leaderboard") },
       },
-      async ({ token, answer }: { token: string; answer: string }) => {
+      async ({ token, answer, name, message }: { token: string; answer: string; name?: string; message?: string }) => {
         const { handleApi } = await import("./api");
         const res = await handleApi(
-          new Request("https://x/api/answer", { method: "POST", body: JSON.stringify({ token, answer }) }),
+          new Request("https://x/api/answer", { method: "POST", body: JSON.stringify({ token, answer, name, message }) }),
           env
         );
         const j = await res!.json();

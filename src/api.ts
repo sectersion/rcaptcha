@@ -12,6 +12,11 @@ async function body(req: Request): Promise<any> {
   try { return text ? JSON.parse(text) : {}; } catch { throw new Response(JSON.stringify({ error: "bad-json" }), { status: 400 }); }
 }
 function utcDay() { return new Date().toISOString().slice(0, 10); }
+function cleanStr(v: unknown, max: number): string | undefined {
+  if (typeof v !== "string") return undefined;
+  const s = v.replace(/[\u0000-\u001f\u007f-\u009f]/g, "").trim().slice(0, max);
+  return s || undefined;
+}
 function csec(env: Env) { return env.CHALLENGE_SECRET || "dev-challenge-secret"; }
 function vsec(env: Env) { return env.CERT_SECRET || "dev-cert-secret"; }
 async function checkCap(env: Env): Promise<Response | null> {
@@ -60,7 +65,9 @@ export async function handleApi(req: Request, env: Env): Promise<Response | null
       if (!r.pass) return Response.json({ pass: false, reason: r.reason });
       const passedAt = new Date().toISOString();
       const cert = await issueCert(vsec(env), { id: p.id, gate: p.gate, prompt, passedAt });
-      await store(env).fetch("https://x/solve", { method: "POST", body: JSON.stringify({ id: p.id, gate: p.gate, passedAt, solveMs }) }).catch(() => {});
+      const name = cleanStr(b.name, 32);
+      const message = cleanStr(b.message, 140);
+      await store(env).fetch("https://x/solve", { method: "POST", body: JSON.stringify({ id: p.id, gate: p.gate, passedAt, solveMs, name, message }) }).catch(() => {});
       return Response.json({ pass: true, certificate: cert, solveMs });
     }
     if (u.pathname === "/api/leaderboard" && req.method === "GET") {
